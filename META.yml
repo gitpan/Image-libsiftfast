@@ -1,5 +1,5 @@
 ---
-abstract: 'perl wrapper of siftfast command'
+abstract: 'perl wrapper of siftfast (libsiftfast) command.'
 author:
   - 'Takeshi Miki <miki@cpan.org>'
 build_requires:
@@ -22,4 +22,4 @@ requires:
   Imager: 0
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.01_01
+version: 0.02

@@ -1,5 +1,9 @@
 Revision history for Perl extension Image::libsiftfast
 
-0.01_01    Fri May 18 00:55:55 2012
+0.02       2012/05/20 
+        - MINOR RELEASE
+
+
+0.01_01    2012/05/182
         - original version
         - DEVELOPPER RELEASE

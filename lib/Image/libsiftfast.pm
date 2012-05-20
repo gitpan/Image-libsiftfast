@@ -4,7 +4,7 @@ use warnings;
 use Data::Dumper;
 use Imager;
 
-our $VERSION = '0.01_01';
+our $VERSION = '0.02';
 
 sub new {
     my $class = shift;
@@ -27,21 +27,25 @@ sub convert_to_pnm {
     return $file;
 }
 
-sub extract_features {
+sub extract_keypoints {
     my $self     = shift;
     my $pnm_file = shift;
 
     my $siftfast_path = $self->{siftfast_path};
-    my @stdout = `$siftfast_path < $pnm_file 2>&1`;
+    my @stdout        = `$siftfast_path < $pnm_file 2>&1`;
 
     my $stderr_message = shift @stdout;
     $stderr_message .= shift @stdout;
+    my ($image_size)
+        = $stderr_message =~ /Finding keypoints \(image ([^\)]+)\).../g;
+    my ( $keypoint_num, $elapsed )
+        = $stderr_message =~ /(\d+) keypoints found in ([0-9.]+) seconds./g;
 
     my @array = map { chomp $_; $_ } @stdout;
     shift @array;    # remove first line;
     my $return_string = join( "\n", @array );
 
-    my @feature_vectors;
+    my @keypoints;
     for ( split "\n\n", $return_string ) {
         my @rec = split "\n", $_;
         my @array;
@@ -55,7 +59,7 @@ sub extract_features {
         my $orientation = shift @array;
         my $vector      = \@array;
 
-        push @feature_vectors,
+        push @keypoints,
             {
             frames => {
                 X           => $X,
@@ -66,8 +70,13 @@ sub extract_features {
             vector => $vector,
             };
     }
-    return \@feature_vectors;
 
+    return {
+        keypoint_num => $keypoint_num,
+        elapsed      => $elapsed,
+        image_size   => $image_size,
+        keypoints    => \@keypoints,
+    };
 }
 
 1;
@@ -75,18 +84,40 @@ __END__
 
 =head1 NAME
 
-Image::libsiftfast - perl wrapper of siftfast command
+Image::libsiftfast - perl wrapper of siftfast (libsiftfast) command.
 
 =head1 SYNOPSIS
 
   use Image::libsiftfast;
 
-  my $sift            = Image::libsiftfast->new;
-  my $feature_vectors = $sift->extract_features("test.pnm");
+  my $sift = Image::libsiftfast->new(siftfast_path => "/usr/local/bin/siftfast");
+
+  # $sift recieves only grayscale file.
+  # If you don't have any grayscale file, convert it to pnmfile.
+
+  my $pnm_file = $sift->convert_to_pnm($jpeg_file);
+
+  # It returns a perl data structure. 
+  my $data = $sift->extract_keypoints($pnm_file);
+
 
 =head1 DESCRIPTION
 
-Image::libsiftfast is a siftfast command wrapper.
+Image::libsiftfast is a siftfast (libsiftfast) command wrapper.
+
+The object returns a perl data structure that have 'keypoints_num', 'elapsed', 'image_size' and keypoints.
+All of the keypoint data contains 'frames' and 'vector' block.
+The frames have 'X', 'Y' coordinate  and 'scale' and 'orientaiton' information.
+The vectors is constructed in 128 dimensions. That is array reference.
+
+
+=head1 METHODS
+
+=head2 new( [SIFTFAST_PATH] )
+
+=head2 convert_to_pnm(IMAGE FILE)
+
+=head2 extract_keypoints(GRAYSCALE IMAGE FILE)
 
 
 =head1 AUTHOR
@@ -94,6 +125,8 @@ Image::libsiftfast is a siftfast command wrapper.
 Takeshi Miki E<lt>miki@cpan.orgE<gt>
 
 =head1 SEE ALSO
+
+http://sourceforge.net/projects/libsift/
 
 =head1 LICENSE
 
