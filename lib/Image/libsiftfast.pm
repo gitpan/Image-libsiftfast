@@ -1,16 +1,18 @@
 package Image::libsiftfast;
 use strict;
 use warnings;
-use Data::Dumper;
+use File::Which qw(which);
 use Imager;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 sub new {
     my $class = shift;
-    my $self = bless {@_}, $class;
-    $self->{siftfast_path} ||= 'siftfast';
-    $self->{imager} = Imager->new;
+    my $self  = bless {
+        siftfast_path => which("siftfast") || undef,
+        imager => Imager->new,
+        @_,
+    }, $class;
     return $self;
 }
 
@@ -109,6 +111,11 @@ The object returns a perl data structure that have 'keypoints_num', 'elapsed', '
 All of the keypoint data contains 'frames' and 'vector' block.
 The frames have 'X', 'Y' coordinate  and 'scale' and 'orientaiton' information.
 The vectors is constructed in 128 dimensions. That is array reference.
+
+
+WARNING: This module relies on siftfast command ( libsiftfast c++ library ).
+         If you want to know and install libsiftfast, see the maual site.
+         ( http://sourceforge.net/projects/libsift/ )
 
 
 =head1 METHODS
